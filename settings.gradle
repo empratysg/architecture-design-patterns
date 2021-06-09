@@ -1,0 +1,2 @@
+rootProject.name = "ArchitectureDesignPattern"
+include ':app'
