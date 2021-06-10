@@ -1,2 +1,4 @@
 rootProject.name = "ArchitectureDesignPattern"
 include ':app'
+include ':domain'
+include ':data'
