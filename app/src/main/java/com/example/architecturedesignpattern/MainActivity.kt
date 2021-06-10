@@ -8,18 +8,21 @@ import com.architecture.data.local.UserSharedPref
 import com.architecture.data.repositories.UserRepositoryImpl
 import com.example.domain.models.User
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var mainModel: MainModel
+class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var userNameEdt: EditText
     private lateinit var passwordEdt: EditText
     private lateinit var signInBtn: Button
     private lateinit var signInLayout: LinearLayout
     private lateinit var welcomeTv: TextView
     private lateinit var signOutBtn: Button
+
+    private lateinit var presenter: MainPresenter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mainModel = MainModel(UserRepositoryImpl(UserSharedPref(applicationContext)))
+
+        presenter =
+            MainPresenter(this, MainModel(UserRepositoryImpl(UserSharedPref(applicationContext))))
 
         userNameEdt = findViewById(R.id.edt_user_name)
         passwordEdt = findViewById(R.id.edt_password)
@@ -31,31 +34,40 @@ class MainActivity : AppCompatActivity() {
         signInBtn.setOnClickListener {
             val userName: String = userNameEdt.text.toString()
             val password: String = passwordEdt.text.toString()
-            if (userName.isNotBlank() && password.isNotBlank()) {
-                mainModel.saveUser(userName, password)
-                welcomeTv.text = "Welcome $userName"
-                signInLayout.visibility = View.GONE
-                welcomeTv.visibility = View.VISIBLE
-                signOutBtn.visibility = View.VISIBLE
-            } else {
-                Toast.makeText(this, "Invalid input", Toast.LENGTH_SHORT).show()
-            }
+            presenter.login(userName, password)
         }
 
         signOutBtn.setOnClickListener {
-            mainModel.removeUser()
-            userNameEdt.setText("")
-            passwordEdt.setText("")
-            signInLayout.visibility = View.VISIBLE
-            welcomeTv.visibility = View.INVISIBLE
-            signOutBtn.visibility = View.INVISIBLE
+            presenter.logOut()
+
+
         }
-        val user: User? = mainModel.getCurrentUser()
-        if (user != null) {
-            welcomeTv.text = "Welcome ${user.userName}"
-            signInLayout.visibility = View.GONE
-            welcomeTv.visibility = View.VISIBLE
-            signOutBtn.visibility = View.VISIBLE
-        }
+
+        presenter.checkLogin()
+    }
+
+    override fun doWelcome(welcome: String) {
+        welcomeTv.text = welcome
+    }
+
+    override fun clearInput() {
+        userNameEdt.setText("")
+        passwordEdt.setText("")
+    }
+
+    override fun showSignInView() {
+        signInLayout.visibility = View.VISIBLE
+        welcomeTv.visibility = View.INVISIBLE
+        signOutBtn.visibility = View.INVISIBLE
+    }
+
+    override fun hideSignInView() {
+        signInLayout.visibility = View.GONE
+        welcomeTv.visibility = View.VISIBLE
+        signOutBtn.visibility = View.VISIBLE
+    }
+
+    override fun showError(error: String) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
     }
 }
