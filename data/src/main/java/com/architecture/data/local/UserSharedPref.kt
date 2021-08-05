@@ -3,9 +3,10 @@ package com.architecture.data.local
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import com.architecture.data.model.UserEntity
+import com.example.domain.models.User
+import io.reactivex.rxjava3.core.Flowable
 
-class UserSharedPref(context: Context) {
+class UserSharedPref(context: Context) : UserDataStore {
     companion object {
         private const val USER_NAME = "user_name";
         private const val PASSWORD = "password";
@@ -14,21 +15,21 @@ class UserSharedPref(context: Context) {
     private val prefs =
         context.getSharedPreferences("architecture.design.pattern", Context.MODE_PRIVATE)
 
-    fun getUser(): UserEntity? {
+    override fun getUser(): Flowable<User> {
         val userName = prefs.getString(USER_NAME, null);
         val password = prefs.getString(PASSWORD, null);
         if (userName != null && password != null) {
-            return UserEntity(userName, password)
+            return Flowable.just(User(userName, password))
         }
-        return null
+        return Flowable.error(NullPointerException())
     }
 
-    fun saveUser(userName: String, password: String) {
+    override fun saveUser(userName: String, password: String) {
         prefs.edit { putString(USER_NAME, userName) }
         prefs.edit { putString(PASSWORD, password) }
     }
 
-    fun removeUser(){
+    override fun removeUser() {
         prefs.edit().clear().apply()
     }
 }
